@@ -24,7 +24,7 @@ services:
     image: prom/prometheus
     container_name: prometheus
     volumes:
-      - /home/jeremy/Documents/projects/cicada-distributed/demos/rest-api/app/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ${WORKDIR}/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - 9090:9090
   grafana:
