@@ -18,11 +18,11 @@ docker-compose build
 Next, start the services:
 
 ```bash
-WORKDIR=$(pwd) docker-compose up -d
+WORKDIR=$(pwd) docker-compose up -d --build
 ```
 
 Finally, go to the integration tests and start Cicada (you may have to start
-the cluster):
+the cluster `cicada-distributed start-cluster`):
 
 ```bash
 cd ../integration-tests

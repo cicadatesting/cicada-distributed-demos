@@ -85,8 +85,7 @@ def post_user(context):
     start = datetime.now()
 
     requests.post(
-        url="http://172.17.0.1:8080/users",
-        # url="http://api:8080/users",
+        url="http://demo-api:8080/users",
         json={
             "name": "jeremy",
             "age": 23,

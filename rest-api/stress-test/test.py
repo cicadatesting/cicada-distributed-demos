@@ -15,6 +15,9 @@ from cicadad.core.scenario import (
     while_alive,
 )
 
+# DEMO_API_ENDPOINT = "http://172.17.0.1:8080"
+DEMO_API_ENDPOINT = "http://demo-api:8080"
+
 engine = Engine()
 
 
@@ -64,8 +67,7 @@ def post_user(context):
     start = datetime.now()
 
     requests.post(
-        url="http://172.17.0.1:8080/users",
-        # url="http://api:8080/users",
+        url=f"{DEMO_API_ENDPOINT}/users",
         json={
             "name": "jeremy",
             "age": 23,

@@ -10,7 +10,7 @@ app = FastAPI()
 app.add_middleware(PrometheusMiddleware)
 app.add_route("/metrics", metrics)
 
-engine = create_engine("mysql+pymysql://root:admin@db:3306/mydb")
+engine = create_engine("mysql+pymysql://root:admin@demo-api-db:3306/mydb")
 
 
 @app.get("/")

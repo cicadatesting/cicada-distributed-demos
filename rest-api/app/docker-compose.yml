@@ -1,33 +1,35 @@
 version: "3"
 services:
-  db:
+  demo-api-db:
     image: mysql
     environment:
       - MYSQL_ROOT_PASSWORD=admin
     ports:
       - 3306:3306
-  flyway:
-    image: flyway/flyway:6-alpine
-    command: -url=jdbc:mysql://db:3306/ -schemas=mydb -user=root -password=admin -connectRetries=60 migrate
-    volumes:
-      - .:/flyway/sql
+  demo-api-flyway:
+    command: -url=jdbc:mysql://demo-api-db:3306/ -schemas=mydb -user=root -password=admin -connectRetries=60 migrate
+    build:
+      context: .
+      dockerfile: flyway.dockerfile
     depends_on:
-      - db
-  api:
+      - demo-api-db
+  demo-api:
     build: .
     ports:
       - 8080:8080
     depends_on:
-      - db
-      - flyway
-  prometheus:
+      - demo-api-db
+      - demo-api-flyway
+  demo-api-prometheus:
     image: prom/prometheus
     container_name: prometheus
     volumes:
       - ${WORKDIR}/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - 9090:9090
-  grafana:
+    depends_on:
+      - demo-api
+  demo-api-grafana:
     image: grafana/grafana
     container_name: grafana
     ports:
@@ -38,5 +40,11 @@ services:
       - GF_AUTH_ANONYMOUS_ORG_NAME=dashboard
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
     volumes:
-      # - /home/jeremy/Documents/projects/cicada-distributed/grafana.ini:/etc/grafana/grafana.ini
-      - /home/jeremy/Documents/projects/cicada-distributed/demos/rest-api/app/datasource.yaml:/etc/grafana/provisioning/datasources/datasource.yaml
+      # - ${WORKDIR}/grafana.ini:/etc/grafana/grafana.ini
+      - ${WORKDIR}/datasource.yaml:/etc/grafana/provisioning/datasources/datasource.yaml
+    depends_on:
+      - demo-api-prometheus
+networks:
+  default:
+    external: true
+    name: cicada-distributed-network
