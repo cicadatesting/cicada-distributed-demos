@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import List
 import requests
 import uuid
 import statistics
@@ -10,6 +11,7 @@ from cicadad.core.decorators import (
     result_aggregator,
     output_transformer,
 )
+from cicadad.services.datastore import Result
 from cicadad.core.engine import Engine
 from cicadad.core.scenario import (
     n_seconds,
@@ -21,7 +23,7 @@ from cicadad.core.scenario import (
 engine = Engine()
 
 
-def runtime_aggregator(previous_aggregate, latest_results):
+def runtime_aggregator(previous_aggregate, latest_results: List[Result]):
     if previous_aggregate is None:
         num_results = 0
         median_ms = 0
@@ -65,8 +67,8 @@ def print_aggregate(aggregate):
     if aggregate is not None:
         return f"""
     * Num Results: {aggregate['num_results']}
-    * Median: {aggregate['median_ms']}
-    * Average: {aggregate['avg_ms']}
+    * Median response (ms): {aggregate['median_ms']}
+    * Average response (ms): {aggregate['avg_ms']}
     """
 
 
