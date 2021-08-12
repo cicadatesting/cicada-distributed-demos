@@ -1,4 +1,4 @@
-FROM cicadatesting/cicada-distributed-base-image:1.1.0
+FROM cicadatesting/cicada-distributed-base-image:1.3.0
 
 RUN pip install requests
 
