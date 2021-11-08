@@ -3,7 +3,15 @@ import requests
 import uuid
 import statistics
 
+from cicadad.metrics.console import (
+    console_collector,
+    console_count,
+    console_latest,
+    console_stats,
+)
 from cicadad.core.decorators import (
+    console_metric_displays,
+    metrics_collector,
     scenario,
     load_model,
     user_loop,
@@ -29,6 +37,7 @@ def runtime_aggregator(previous_aggregate, latest_results):
         num_results = previous_aggregate["num_results"]
         mean_ms = previous_aggregate["mean_ms"]
 
+    # FEATURE: more built in functions to accomplish this functionality
     runtimes = []
 
     for result in latest_results:
@@ -53,16 +62,32 @@ def runtime_aggregator(previous_aggregate, latest_results):
     }
 
 
+def extract_ms(latest_results):
+    return [
+        float(result.output) for result in latest_results if result.exception is None
+    ]
+
+
 @scenario(engine)
 @load_model(
     ramp_users_to_threshold(
         initial_users=10,
-        threshold_fn=lambda agg: agg is not None and agg["mean_ms"] > 100,
+        threshold_fn=lambda agg: agg is not None and agg["mean_ms"] > 75,
         next_users_fn=lambda n: n + 5,
     )
 )
 @user_loop(while_alive())
 @result_aggregator(runtime_aggregator)
+@metrics_collector(console_collector("stats", extract_ms))
+@metrics_collector(console_collector("latest", extract_ms))
+@metrics_collector(console_collector("count", extract_ms))
+@console_metric_displays(
+    {
+        "stats": console_stats(),
+        "latest": console_latest(),
+        "count": console_count(),
+    }
+)
 def post_user(context):
     start = datetime.now()
 

@@ -2,17 +2,6 @@ import http from 'k6/http';
 import { sleep } from 'k6';
 import { uuidv4 } from "https://jslib.k6.io/k6-utils/1.3.0/index.js";
 
-/*
-requests.post(
-        url="http://demo-api:8080/users",
-        json={
-            "name": "jeremy",
-            "age": 23,
-            "email": f"{str(uuid.uuid4())[:8]}@gmail.com",
-        },
-    )
-*/
-
 export default function () {
     const data = {
         name: "jeremy",
@@ -26,6 +15,6 @@ export default function () {
         { headers: { 'Content-Type': 'application/json' } }
     );
 
-    // console.log("resp:", JSON.stringify(resp, null, 2));
-    // sleep(1);
+    console.log("resp:", JSON.stringify(resp, null, 2));
+    sleep(1);
 }
