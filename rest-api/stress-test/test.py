@@ -1,4 +1,4 @@
-from datetime import datetime
+from typing import Any, List
 import requests
 import uuid
 import statistics
@@ -8,6 +8,7 @@ from cicadad.metrics.console import (
     console_count,
     console_latest,
     console_stats,
+    console_percent,
 )
 from cicadad.core.decorators import (
     console_metric_displays,
@@ -17,6 +18,7 @@ from cicadad.core.decorators import (
     user_loop,
     result_aggregator,
 )
+from cicadad.core.types import Result
 from cicadad.core.engine import Engine
 from cicadad.core.scenario import (
     ramp_users_to_threshold,
@@ -29,68 +31,64 @@ DEMO_API_ENDPOINT = "http://demo-api:8080"
 engine = Engine()
 
 
-def runtime_aggregator(previous_aggregate, latest_results):
-    if previous_aggregate is None:
-        num_results = 0
-        mean_ms = 0
-    else:
-        num_results = previous_aggregate["num_results"]
-        mean_ms = previous_aggregate["mean_ms"]
-
+def runtime_aggregator(previous_aggregate: Any, latest_results: List[Result]):
     # FEATURE: more built in functions to accomplish this functionality
-    runtimes = []
-
-    for result in latest_results:
-        if result.exception is None:
-            runtimes.append(result.output)
-
-    if runtimes != []:
-        latest_num_results = len(runtimes)
-        latest_mean_ms = statistics.mean(runtimes)
-
-        new_num_results = num_results + latest_num_results
-        new_mean = ((mean_ms * num_results) + (latest_mean_ms * latest_num_results)) / (
-            num_results + latest_num_results
-        )
-    else:
-        new_num_results = num_results
-        new_mean = mean_ms
-
     return {
-        "num_results": new_num_results,
-        "mean_ms": new_mean,
+        "avg_runtime": 0
+        if len(latest_results) < 5
+        else statistics.mean(result.time_taken for result in latest_results)
     }
 
 
-def extract_ms(latest_results):
-    return [
-        float(result.output) for result in latest_results if result.exception is None
-    ]
+def runtime_ms(latest_results: List[Result]):
+    return [result.time_taken * 1000 for result in latest_results]
+
+
+def pass_or_fail(latest_results: List[Result]):
+    return [0 if result.exception is not None else 1 for result in latest_results]
+
+
+def requests_per_second(latest_results: List[Result]):
+    if len(latest_results) < 5:
+        return []
+
+    min_timestamp = latest_results[0].timestamp
+    max_timestamp = latest_results[0].timestamp
+
+    for result in latest_results:
+        if result.timestamp < min_timestamp:
+            min_timestamp = result.timestamp
+
+        if result.timestamp > max_timestamp:
+            max_timestamp = result.timestamp
+
+    seconds = (max_timestamp - min_timestamp).total_seconds()
+
+    return [len(latest_results) // seconds]
 
 
 @scenario(engine)
 @load_model(
     ramp_users_to_threshold(
         initial_users=10,
-        threshold_fn=lambda agg: agg is not None and agg["mean_ms"] > 75,
+        threshold_fn=lambda agg: agg is not None and agg["avg_runtime"] > 0.075,
         next_users_fn=lambda n: n + 5,
     )
 )
 @user_loop(while_alive())
 @result_aggregator(runtime_aggregator)
-@metrics_collector(console_collector("stats", extract_ms))
-@metrics_collector(console_collector("latest", extract_ms))
-@metrics_collector(console_collector("count", extract_ms))
+@metrics_collector(console_collector("ms", runtime_ms))
+@metrics_collector(console_collector("pass_or_fail", pass_or_fail))
+@metrics_collector(console_collector("rps", requests_per_second))
 @console_metric_displays(
     {
-        "stats": console_stats(),
-        "latest": console_latest(),
-        "count": console_count(),
+        "runtime_stats": console_stats("ms"),
+        "rps": console_stats("rps"),
+        "latest_rps": console_latest("rps"),
+        "success_rate": console_percent("pass_or_fail", 0),
     }
 )
 def post_user(context):
-    start = datetime.now()
-
     requests.post(
         url=f"{DEMO_API_ENDPOINT}/users",
         json={
@@ -99,10 +97,6 @@ def post_user(context):
             "email": f"{str(uuid.uuid4())[:8]}@gmail.com",
         },
     )
-
-    end = datetime.now()
-
-    return ((end - start).seconds + (end - start).microseconds / 1000000) * 1000
 
 
 if __name__ == "__main__":

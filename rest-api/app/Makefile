@@ -8,7 +8,7 @@ up:
 	docker-compose up -d --build
 
 down:
-	docker-compose down
+	docker-compose down --remove-orphans
 
 import-images:
 	docker build -t cicadatesting/demo-api-app:local .

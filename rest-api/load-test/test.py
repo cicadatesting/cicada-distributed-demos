@@ -4,6 +4,7 @@ import requests
 import uuid
 import statistics
 
+from cicadad.core.types import Result
 from cicadad.core.decorators import (
     scenario,
     load_model,
@@ -11,7 +12,6 @@ from cicadad.core.decorators import (
     result_aggregator,
     output_transformer,
 )
-from cicadad.services.datastore import Result
 from cicadad.core.engine import Engine
 from cicadad.core.scenario import (
     n_seconds,
@@ -75,9 +75,9 @@ def print_aggregate(aggregate):
 @scenario(engine)
 @load_model(
     load_stages(
-        n_users_ramping(60, 30, skip_scaledown=True),
-        n_seconds(180, 30, skip_scaledown=True),
-        n_users_ramping(60, 0, skip_scaledown=True),
+        n_users_ramping(30, 30, skip_scaledown=True),
+        n_seconds(30, 30, skip_scaledown=True),
+        n_users_ramping(30, 0, skip_scaledown=True),
     )
 )
 @user_loop(iterations_per_second_limited(4))

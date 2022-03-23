@@ -1,18 +1,21 @@
+import os
+
 import requests
 import uuid
-
 
 from cicadad.core.decorators import dependency, scenario
 from cicadad.core.engine import Engine
 
 # DEMO_API_ENDPOINT = "http://172.17.0.1:8080"
 DEMO_API_ENDPOINT = "http://demo-api:8080"
+# DEMO_API_ENDPOINT = "http://localhost:8080"
 
 engine = Engine()
 
 
 @scenario(engine)
 def post_user(context):
+    print("os.env", os.environ)
     email = f"{str(uuid.uuid4())[:8]}@gmail.com"
 
     response = requests.post(
