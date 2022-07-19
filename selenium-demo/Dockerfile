@@ -1,4 +1,4 @@
-FROM cicadatesting/cicada-distributed-base-image:1.3.0
+FROM cicadatesting/cicada-distributed-base-image:1.6.0
 
 RUN apt-get update
 RUN apt-get install -y bash unzip curl xvfb libxi6 libgconf-2-4 gnupg
